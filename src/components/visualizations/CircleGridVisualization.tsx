@@ -11,9 +11,10 @@ import React, { useMemo, useState, useCallback, useRef } from 'react';
 import { useVar, useVariableStore } from '@/stores';
 
 // Consistent color palette across all visualizations
+// Using lighter, more muted colors for better visibility of overlaid elements
 const COLORS = {
-    // Primary colors
-    inside: '#0ea5e9',      // Sky blue - tiles inside circle
+    // Primary colors - lighter sky blue for tiles
+    inside: '#7dd3fc',      // Light sky blue - tiles inside circle
     outside: '#f1f5f9',     // Light gray - tiles outside
     outsideDim: '#e2e8f0',  // Dimmed gray
 
@@ -26,16 +27,16 @@ const COLORS = {
     boundingBox: '#8b5cf6', // Purple
     boundingBoxFill: '#fef3c7', // Light yellow
 
-    // Pythagorean triangle
-    dy: '#f97316',          // Orange - vertical
-    dx: '#22c55e',          // Green - horizontal
-    hypotenuse: '#3b82f6',  // Blue - radius
-    rowHighlight: '#8b5cf6', // Purple
+    // Pythagorean triangle - bolder colors for visibility
+    dy: '#ea580c',          // Orange - vertical (darker)
+    dx: '#16a34a',          // Green - horizontal (darker)
+    hypotenuse: '#2563eb',  // Blue - radius (darker)
+    rowHighlight: '#7c3aed', // Purple (darker)
 
-    // Outline symmetry colors
+    // Outline symmetry colors - slightly muted
     symmetry: [
-        '#3b82f6', '#ef4444', '#22c55e', '#f59e0b',
-        '#8b5cf6', '#ec4899', '#14b8a6', '#f97316'
+        '#60a5fa', '#f87171', '#4ade80', '#fbbf24',
+        '#a78bfa', '#f472b6', '#2dd4bf', '#fb923c'
     ],
 
     // Grid

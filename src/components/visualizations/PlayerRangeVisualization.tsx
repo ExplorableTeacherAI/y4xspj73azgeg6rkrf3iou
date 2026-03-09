@@ -12,10 +12,11 @@ import React, { useMemo, useState, useCallback, useRef } from 'react';
 import { useVar, useVariableStore } from '@/stores';
 
 // Consistent color palette matching CircleGridVisualization
+// Using lighter, more muted colors for better visibility
 const COLORS = {
-    // Primary colors - matching CircleGridVisualization
-    inside: '#0ea5e9',       // Sky blue - tiles inside circle
-    insideGlow: '#0ea5e9',   // Matching glow for consistency
+    // Primary colors - lighter sky blue matching CircleGridVisualization
+    inside: '#7dd3fc',       // Light sky blue - tiles inside circle
+    insideGlow: '#7dd3fc',   // Matching glow for consistency
     outside: '#f1f5f9',      // Light gray - matching CircleGridVisualization
     outsideDim: '#e2e8f0',   // Dimmed gray
 
