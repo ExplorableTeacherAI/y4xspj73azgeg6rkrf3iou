@@ -63,8 +63,16 @@ All colors MUST be HSL.
     --popover: 0 0% 100%;
     --popover-foreground: 222.2 84% 4.9%;
 
-    --primary: 189 100% 50%;
+    --primary: 199 89% 48%;
     --primary-foreground: 210 40% 98%;
+
+    /* Circle Fill lesson colors */
+    --grid-tile: 210 20% 96%;
+    --grid-tile-inside: 199 89% 48%;
+    --grid-tile-outside: 210 20% 90%;
+    --grid-tile-boundary: 45 93% 58%;
+    --grid-center: 350 89% 60%;
+    --grid-line: 220 13% 80%;
 
     --secondary: 210 40% 96%;
     --secondary-foreground: 222.2 84% 4.9%;
@@ -103,8 +111,16 @@ All colors MUST be HSL.
     --popover: 230 30% 10%;
     --popover-foreground: 210 40% 98%;
 
-    --primary: 189 100% 50%;
+    --primary: 199 89% 48%;
     --primary-foreground: 230 35% 7%;
+
+    /* Circle Fill lesson colors - dark mode */
+    --grid-tile: 230 25% 18%;
+    --grid-tile-inside: 199 89% 48%;
+    --grid-tile-outside: 230 25% 25%;
+    --grid-tile-boundary: 45 93% 58%;
+    --grid-center: 350 89% 60%;
+    --grid-line: 230 20% 35%;
 
     --secondary: 270 60% 60%;
     --secondary-foreground: 210 40% 98%;

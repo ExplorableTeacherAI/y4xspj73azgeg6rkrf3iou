@@ -78,83 +78,223 @@ export interface VariableDefinition {
  */
 export const variableDefinitions: Record<string, VariableDefinition> = {
     // ========================================
-    // ADD YOUR VARIABLES HERE
+    // CIRCLE FILL ON A GRID - LESSON VARIABLES
     // ========================================
 
-    // Uncomment and modify these examples for your lesson:
-
-    /*
     // ─────────────────────────────────────────
-    // NUMBER - Use with sliders
+    // SECTION 1: Introduction
     // ─────────────────────────────────────────
-    myValue: {
-        defaultValue: 5,
+    introRadius: {
+        defaultValue: 3.5,
         type: 'number',
-        label: 'My Value',
-        description: 'A number that controls something',
-        unit: 'm',           // optional unit display
-        min: 0,
-        max: 10,
+        label: 'Circle Radius',
+        description: 'Radius of the circle for the intro visualization',
+        min: 0.5,
+        max: 6,
         step: 0.5,
+        color: '#0ea5e9',
     },
 
     // ─────────────────────────────────────────
-    // TEXT - Free text input
+    // SECTION 2: Distance Test
     // ─────────────────────────────────────────
-    lessonTitle: {
-        defaultValue: 'My Lesson',
-        type: 'text',
-        label: 'Lesson Title',
-        description: 'The title of your lesson',
-        placeholder: 'Enter a title...',
+    distanceRadius: {
+        defaultValue: 3.5,
+        type: 'number',
+        label: 'Circle Radius',
+        description: 'Radius for distance test visualization',
+        min: 1,
+        max: 6,
+        step: 0.5,
+        color: '#0ea5e9',
     },
-
-    // ─────────────────────────────────────────
-    // SELECT - Dropdown with options
-    // ─────────────────────────────────────────
-    difficulty: {
-        defaultValue: 'medium',
-        type: 'select',
-        label: 'Difficulty',
-        description: 'The difficulty level of the lesson',
-        options: ['easy', 'medium', 'hard', 'expert'],
-    },
-
-    // ─────────────────────────────────────────
-    // BOOLEAN - Toggle switch
-    // ─────────────────────────────────────────
-    showHints: {
+    showDistances: {
         defaultValue: true,
         type: 'boolean',
-        label: 'Show Hints',
-        description: 'Toggle to show or hide hints',
+        label: 'Show Distances',
+        description: 'Toggle to show distance values on tiles',
+    },
+    highlightElement: {
+        defaultValue: '',
+        type: 'linkedHighlight',
+        label: 'Highlight Element',
+        description: 'Currently highlighted element in the grid',
+        color: '#f97316',
     },
 
     // ─────────────────────────────────────────
-    // ARRAY - List of numbers
+    // SECTION 3: Bounding Box
     // ─────────────────────────────────────────
-    dataPoints: {
-        defaultValue: [1, 4, 9, 16, 25],
-        type: 'array',
-        label: 'Data Points',
-        description: 'Y-values for plotting a graph',
+    boundingBoxRadius: {
+        defaultValue: 3.5,
+        type: 'number',
+        label: 'Bounding Box Radius',
+        description: 'Radius for bounding box visualization',
+        min: 1,
+        max: 5,
+        step: 0.5,
+        color: '#0ea5e9',
+    },
+    showBoundingBox: {
+        defaultValue: true,
+        type: 'boolean',
+        label: 'Show Bounding Box',
+        description: 'Toggle to show the bounding box',
     },
 
     // ─────────────────────────────────────────
-    // OBJECT - Complex structured data
+    // SECTION 4: Bounding Circle
     // ─────────────────────────────────────────
-    graphSettings: {
-        defaultValue: { 
-            xMin: -10, 
-            xMax: 10, 
-            showGrid: true 
-        },
-        type: 'object',
-        label: 'Graph Settings',
-        description: 'Configuration for the graph display',
-        schema: '{ xMin: number, xMax: number, showGrid: boolean }',
+    boundingCircleRadius: {
+        defaultValue: 6.5,
+        type: 'number',
+        label: 'Bounding Circle Radius',
+        description: 'Radius for bounding circle visualization',
+        min: 2,
+        max: 8,
+        step: 0.5,
+        color: '#0ea5e9',
     },
-    */
+    selectedRow: {
+        defaultValue: 4,
+        type: 'number',
+        label: 'Selected Row',
+        description: 'Row offset from center for Pythagorean triangle',
+        min: 0,
+        max: 6,
+        step: 1,
+        color: '#f97316',
+    },
+
+    // ─────────────────────────────────────────
+    // SECTION 5: Circle Outlines
+    // ─────────────────────────────────────────
+    outlineRadius: {
+        defaultValue: 6.5,
+        type: 'number',
+        label: 'Outline Radius',
+        description: 'Radius for circle outline visualization',
+        min: 2,
+        max: 8,
+        step: 0.5,
+        color: '#0ea5e9',
+    },
+    outlineStep: {
+        defaultValue: 3,
+        type: 'number',
+        label: 'Outline Step',
+        description: 'Current step in the outline algorithm',
+        min: 0,
+        max: 5,
+        step: 1,
+        color: '#8b5cf6',
+    },
+    showSymmetry: {
+        defaultValue: false,
+        type: 'boolean',
+        label: 'Show Symmetry',
+        description: 'Toggle to show 8-fold symmetry',
+    },
+
+    // ─────────────────────────────────────────
+    // SECTION 6: Aesthetics
+    // ─────────────────────────────────────────
+    aestheticRadiusA: {
+        defaultValue: 4.0,
+        type: 'number',
+        label: 'Radius A',
+        description: 'First radius for comparison (integer)',
+        min: 1,
+        max: 6,
+        step: 1,
+        color: '#ef4444',
+    },
+    aestheticRadiusB: {
+        defaultValue: 4.5,
+        type: 'number',
+        label: 'Radius B',
+        description: 'Second radius for comparison (half-integer)',
+        min: 1.5,
+        max: 6.5,
+        step: 1,
+        color: '#22c55e',
+    },
+    centerOnVertex: {
+        defaultValue: false,
+        type: 'boolean',
+        label: 'Center on Vertex',
+        description: 'Toggle to center circle on vertex instead of tile',
+    },
+    centerX: {
+        defaultValue: 8,
+        type: 'number',
+        label: 'Center X',
+        description: 'X coordinate of the circle center',
+        min: 5,
+        max: 12,
+        step: 0.1,
+        color: '#3b82f6',
+    },
+    centerY: {
+        defaultValue: 4,
+        type: 'number',
+        label: 'Center Y',
+        description: 'Y coordinate of the circle center',
+        min: 2,
+        max: 7,
+        step: 0.1,
+        color: '#8b5cf6',
+    },
+
+    // ─────────────────────────────────────────
+    // ASSESSMENT QUESTIONS
+    // ─────────────────────────────────────────
+    answer_neighbors: {
+        defaultValue: '',
+        type: 'text',
+        label: 'Number of Neighbors',
+        description: 'Answer for grid neighbor count question',
+        correctAnswer: '4',
+        placeholder: '?',
+        color: '#3B82F6',
+    },
+    answer_distance_formula: {
+        defaultValue: '',
+        type: 'text',
+        label: 'Distance Formula',
+        description: 'Answer for distance squared formula',
+        correctAnswer: 'dx*dx + dy*dy',
+        placeholder: '???',
+        color: '#3B82F6',
+        caseSensitive: false,
+    },
+    answer_bounding_box_tiles: {
+        defaultValue: '',
+        type: 'text',
+        label: 'Bounding Box Tiles',
+        description: 'Answer for bounding box tile count',
+        correctAnswer: '49',
+        placeholder: '?',
+        color: '#3B82F6',
+    },
+    answer_sqrt_optimization: {
+        defaultValue: '',
+        type: 'select',
+        label: 'Square Root Optimization',
+        description: 'Why we can avoid sqrt',
+        options: ['Both values are always positive', 'sqrt is expensive to compute', 'It gives the same comparison result', 'All of the above'],
+        correctAnswer: 'All of the above',
+        color: '#8b5cf6',
+    },
+    answer_outline_tiles: {
+        defaultValue: '',
+        type: 'text',
+        label: 'Outline Tiles',
+        description: 'How many tiles drawn per iteration',
+        correctAnswer: '8',
+        placeholder: '?',
+        color: '#3B82F6',
+    },
 };
 
 /**
