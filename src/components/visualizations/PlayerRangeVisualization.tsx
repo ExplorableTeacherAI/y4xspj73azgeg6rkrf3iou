@@ -32,8 +32,6 @@ const COLORS = {
 
     // Grid
     gridLine: '#e2e8f0',
-    gridPattern: '#4ade80',
-    gridPatternDot: '#22c55e',
 };
 
 export interface PlayerRangeVisualizationProps {
@@ -177,16 +175,8 @@ export const PlayerRangeVisualization = ({
                 className="w-full"
                 style={{ height, maxHeight: height, cursor: isDragging ? 'grabbing' : 'default' }}
             >
-                {/* Background - grass-like field */}
-                <defs>
-                    <pattern id="grass-pattern" patternUnits="userSpaceOnUse" width="20" height="20">
-                        <rect width="20" height="20" fill={COLORS.gridPattern} opacity="0.15" />
-                        <circle cx="5" cy="5" r="1" fill={COLORS.gridPatternDot} opacity="0.2" />
-                        <circle cx="15" cy="15" r="1" fill={COLORS.gridPatternDot} opacity="0.2" />
-                    </pattern>
-                </defs>
+                {/* Background - clean white matching CircleGridVisualization */}
                 <rect x={0} y={0} width={width} height={height} fill="white" />
-                <rect x={padding} y={padding} width={gridSize * tileSize} height={gridSize * tileSize} fill="url(#grass-pattern)" />
 
                 {/* Grid lines - subtle */}
                 {Array.from({ length: gridSize + 1 }).map((_, i) => (
