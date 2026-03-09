@@ -295,6 +295,64 @@ export const variableDefinitions: Record<string, VariableDefinition> = {
         placeholder: '?',
         color: '#3B82F6',
     },
+
+    // ─────────────────────────────────────────
+    // SECTION 7: Cones / Sectors
+    // ─────────────────────────────────────────
+    coneAngle: {
+        defaultValue: 45,
+        type: 'number',
+        label: 'Cone Angle',
+        description: 'Direction angle of the cone in degrees',
+        min: 0,
+        max: 360,
+        step: 15,
+        unit: '°',
+        color: '#f97316',
+    },
+    coneWidth: {
+        defaultValue: 30,
+        type: 'number',
+        label: 'Cone Width',
+        description: 'Angular width of the cone in degrees',
+        min: 10,
+        max: 180,
+        step: 10,
+        unit: '°',
+        color: '#8b5cf6',
+    },
+    coneRadius: {
+        defaultValue: 5,
+        type: 'number',
+        label: 'Cone Radius',
+        description: 'Radius of the cone/sector',
+        min: 2,
+        max: 7,
+        step: 0.5,
+        color: '#0ea5e9',
+    },
+    coneMode: {
+        defaultValue: 'conservative',
+        type: 'select',
+        label: 'Cone Mode',
+        description: 'Conservative checks tile center, permissive checks all corners',
+        options: ['conservative', 'permissive'],
+        color: '#22c55e',
+    },
+
+    // ─────────────────────────────────────────
+    // SECTION 8: Tradeoff Comparison
+    // ─────────────────────────────────────────
+    comparisonRadius: {
+        defaultValue: 4,
+        type: 'number',
+        label: 'Comparison Radius',
+        description: 'Radius for tradeoff comparison visualization',
+        min: 2,
+        max: 8,
+        step: 1,
+        color: '#0ea5e9',
+    },
 };
 
 /**

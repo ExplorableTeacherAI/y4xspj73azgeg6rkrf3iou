@@ -14,10 +14,13 @@ import {
     InlineClozeChoice,
     InlineLinkedHighlight,
     InlineSpotColor,
+    InlineToggle,
 } from "@/components/atoms";
 import { FormulaBlock } from "@/components/molecules/formula/FormulaBlock";
 import { CircleGridVisualization } from "@/components/visualizations/CircleGridVisualization";
 import { PlayerRangeVisualization } from "@/components/visualizations/PlayerRangeVisualization";
+import { ConeSectorVisualization } from "@/components/visualizations/ConeSectorVisualization";
+import { TradeoffComparisonVisualization } from "@/components/visualizations/TradeoffComparisonVisualization";
 
 // Initialize variables and their colors from this file's variable definitions
 import { useVariableStore, initializeVariableColors } from "@/stores";
@@ -609,13 +612,228 @@ const aestheticsBlocks: ReactElement[] = [
 ];
 
 // ============================================================================
-// SECTION 7: SUMMARY
+// SECTION 7: CONS AND TRADEOFFS
+// ============================================================================
+const consBlocks: ReactElement[] = [
+    <StackLayout key="layout-cons-title" maxWidth="xl">
+        <Block id="cons-title" padding="lg">
+            <EditableH2 id="h2-cons-title" blockId="cons-title">
+                6. Cons and Tradeoffs
+            </EditableH2>
+        </Block>
+    </StackLayout>,
+
+    <StackLayout key="layout-cons-intro" maxWidth="xl">
+        <Block id="cons-intro" padding="sm">
+            <EditableParagraph id="para-cons-intro" blockId="cons-intro">
+                Each approach comes with tradeoffs. Understanding these limitations helps you choose the right algorithm for your specific use case. The visualization below shows how many tiles each algorithm checks for a given radius.
+            </EditableParagraph>
+        </Block>
+    </StackLayout>,
+
+    <StackLayout key="layout-cons-visualization" maxWidth="xl">
+        <Block id="cons-visualization" padding="md" hasVisualization>
+            <div className="text-center mb-2">
+                <span className="text-sm font-medium text-muted-foreground">
+                    Radius ={" "}
+                    <InlineScrubbleNumber
+                        id="scrubble-comparison-radius"
+                        varName="comparisonRadius"
+                        {...numberPropsFromDefinition(getVariableInfo("comparisonRadius"))}
+                    />
+                </span>
+            </div>
+            <TradeoffComparisonVisualization
+                radiusVar="comparisonRadius"
+                gridSize={11}
+                height={320}
+            />
+        </Block>
+    </StackLayout>,
+
+    <StackLayout key="layout-cons-naive" maxWidth="xl">
+        <Block id="cons-naive" padding="sm">
+            <EditableH3 id="h3-cons-naive" blockId="cons-naive">
+                Distance Test Cons
+            </EditableH3>
+        </Block>
+    </StackLayout>,
+
+    <StackLayout key="layout-cons-naive-text" maxWidth="xl">
+        <Block id="cons-naive-text" padding="sm">
+            <EditableParagraph id="para-cons-naive-text" blockId="cons-naive-text">
+                The naive distance test checks every tile in the entire grid, making it extremely inefficient for large grids. A circle with radius 5 in a 1000×1000 grid touches only about 81 tiles, yet the algorithm checks all 1,000,000 tiles. The computational complexity is O(grid_width × grid_height) regardless of the circle size.
+            </EditableParagraph>
+        </Block>
+    </StackLayout>,
+
+    <StackLayout key="layout-cons-bbox" maxWidth="xl">
+        <Block id="cons-bbox" padding="sm">
+            <EditableH3 id="h3-cons-bbox" blockId="cons-bbox">
+                Bounding Box Cons
+            </EditableH3>
+        </Block>
+    </StackLayout>,
+
+    <StackLayout key="layout-cons-bbox-text" maxWidth="xl">
+        <Block id="cons-bbox-text" padding="sm">
+            <EditableParagraph id="para-cons-bbox-text" blockId="cons-bbox-text">
+                While much better than the naive approach, the bounding box still wastes effort on corner tiles. A square bounding box for a circle contains approximately 21% tiles that lie outside the circle (the corners). For each tile, we still perform a distance calculation.
+            </EditableParagraph>
+        </Block>
+    </StackLayout>,
+
+    <StackLayout key="layout-cons-bcircle" maxWidth="xl">
+        <Block id="cons-bcircle" padding="sm">
+            <EditableH3 id="h3-cons-bcircle" blockId="cons-bcircle">
+                Bounding Circle Cons
+            </EditableH3>
+        </Block>
+    </StackLayout>,
+
+    <StackLayout key="layout-cons-bcircle-text" maxWidth="xl">
+        <Block id="cons-bcircle-text" padding="sm">
+            <EditableParagraph id="para-cons-bcircle-text" blockId="cons-bcircle-text">
+                The bounding circle approach requires computing a square root for each row, which is more expensive than simple comparisons. For small circles (radius less than about 10), the overhead may outweigh the savings. The code is also more complex, making it harder to maintain. In practice, the bounding box with squared distance comparison is often the sweet spot.
+            </EditableParagraph>
+        </Block>
+    </StackLayout>,
+];
+
+// ============================================================================
+// SECTION 8: CONES / SECTORS
+// ============================================================================
+const coneBlocks: ReactElement[] = [
+    <StackLayout key="layout-cone-title" maxWidth="xl">
+        <Block id="cone-title" padding="lg">
+            <EditableH2 id="h2-cone-title" blockId="cone-title">
+                7. Cones and Sectors
+            </EditableH2>
+        </Block>
+    </StackLayout>,
+
+    <StackLayout key="layout-cone-intro" maxWidth="xl">
+        <Block id="cone-intro" padding="sm">
+            <EditableParagraph id="para-cone-intro" blockId="cone-intro">
+                A "cone" view in 2D is called a sector. It includes all tiles that fit within the circle and are within some range of angles. This is useful for field-of-view calculations, directional attacks, or spotlight effects in games.
+            </EditableParagraph>
+        </Block>
+    </StackLayout>,
+
+    <SplitLayout key="layout-cone-visualization" ratio="1:1" gap="lg" align="center">
+        <Block id="cone-grid" padding="sm" hasVisualization>
+            <ConeSectorVisualization
+                radiusVar="coneRadius"
+                angleVar="coneAngle"
+                widthVar="coneWidth"
+                modeVar="coneMode"
+                gridSize={15}
+                height={380}
+            />
+        </Block>
+        <Block id="cone-controls" padding="sm">
+            <EditableParagraph id="para-cone-controls" blockId="cone-controls">
+                Direction angle ={" "}
+                <InlineScrubbleNumber
+                    id="scrubble-cone-angle"
+                    varName="coneAngle"
+                    {...numberPropsFromDefinition(getVariableInfo("coneAngle"))}
+                />
+                °, width ={" "}
+                <InlineScrubbleNumber
+                    id="scrubble-cone-width"
+                    varName="coneWidth"
+                    {...numberPropsFromDefinition(getVariableInfo("coneWidth"))}
+                />
+                °, mode:{" "}
+                <InlineToggle
+                    id="toggle-cone-mode"
+                    varName="coneMode"
+                    options={["conservative", "permissive"]}
+                    color="#22c55e"
+                />
+            </EditableParagraph>
+        </Block>
+    </SplitLayout>,
+
+    <StackLayout key="layout-cone-algorithm" maxWidth="xl">
+        <Block id="cone-algorithm" padding="sm">
+            <EditableParagraph id="para-cone-algorithm" blockId="cone-algorithm">
+                One way to calculate this is to compute the angle for a tile using atan2(). If the angle is within the desired range, include the tile. However, that is conservative: it only includes tiles whose centers are in the sector. A more permissive algorithm checks all four corners of each tile. If any corner angle is within range, include the tile.
+            </EditableParagraph>
+        </Block>
+    </StackLayout>,
+
+    <StackLayout key="layout-cone-note" maxWidth="xl">
+        <Block id="cone-note" padding="sm">
+            <EditableParagraph id="para-cone-note" blockId="cone-note">
+                Calculating angle differences requires care because of wraparound at 0°/360°. The permissive mode produces smoother edges but includes more tiles, which may or may not match what you want from a cone algorithm depending on your game's requirements.
+            </EditableParagraph>
+        </Block>
+    </StackLayout>,
+];
+
+// ============================================================================
+// SECTION 9: MORE
+// ============================================================================
+const moreBlocks: ReactElement[] = [
+    <StackLayout key="layout-more-title" maxWidth="xl">
+        <Block id="more-title" padding="lg">
+            <EditableH2 id="h2-more-title" blockId="more-title">
+                8. More Techniques
+            </EditableH2>
+        </Block>
+    </StackLayout>,
+
+    <StackLayout key="layout-more-intro" maxWidth="xl">
+        <Block id="more-intro" padding="sm">
+            <EditableParagraph id="para-more-intro" blockId="more-intro">
+                Circle fills are simpler than circle outlines. The usual approach for circle outlines is the Bresenham algorithm, optimized for CPUs without floating point. The circle fill algorithm can be extended to work when the circle center is not on a tile, but the circles do not look as nice.
+            </EditableParagraph>
+        </Block>
+    </StackLayout>,
+
+    <StackLayout key="layout-more-integer" maxWidth="xl">
+        <Block id="more-integer" padding="sm">
+            <EditableH3 id="h3-more-integer" blockId="more-integer">
+                Integer-Only Optimization
+            </EditableH3>
+        </Block>
+    </StackLayout>,
+
+    <StackLayout key="layout-more-integer-text" maxWidth="xl">
+        <Block id="more-integer-text" padding="sm">
+            <EditableParagraph id="para-more-integer-text" blockId="more-integer-text">
+                If you are always using integer tile positions and half-integer radius, you can optimize the inside_circle function by using integer math only. Multiply the diameter by 2 and compare 4 × distance² against diameter². This avoids all floating-point operations, which can be significant on embedded systems or in tight inner loops.
+            </EditableParagraph>
+        </Block>
+    </StackLayout>,
+
+    <StackLayout key="layout-more-techniques" maxWidth="xl">
+        <Block id="more-techniques" padding="sm">
+            <EditableH3 id="h3-more-techniques" blockId="more-techniques">
+                Related Techniques
+            </EditableH3>
+        </Block>
+    </StackLayout>,
+
+    <StackLayout key="layout-more-techniques-text" maxWidth="xl">
+        <Block id="more-techniques-text" padding="sm">
+            <EditableParagraph id="para-more-techniques-text" blockId="more-techniques-text">
+                Two techniques from this lesson are useful elsewhere: Using a bounding box and then checking if the tile is inside the shape works well for triangle fills. Calculating the left and right tiles on a single row and then filling that span is also useful for triangles. The left/right scan line approach visits fewer tiles but is harder to parallelize than the bounding box + check approach.
+            </EditableParagraph>
+        </Block>
+    </StackLayout>,
+];
+
+// ============================================================================
+// SECTION 10: SUMMARY
 // ============================================================================
 const summaryBlocks: ReactElement[] = [
     <StackLayout key="layout-summary-title" maxWidth="xl">
         <Block id="summary-title" padding="lg">
             <EditableH2 id="h2-summary-title" blockId="summary-title">
-                Summary
+                9. Summary
             </EditableH2>
         </Block>
     </StackLayout>,
@@ -661,5 +879,8 @@ export const blocks: ReactElement[] = [
     ...boundingCircleBlocks,
     ...outlineBlocks,
     ...aestheticsBlocks,
+    ...consBlocks,
+    ...coneBlocks,
+    ...moreBlocks,
     ...summaryBlocks,
 ];
