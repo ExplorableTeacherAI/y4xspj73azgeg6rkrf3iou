@@ -612,102 +612,13 @@ const aestheticsBlocks: ReactElement[] = [
 ];
 
 // ============================================================================
-// SECTION 7: CONS AND TRADEOFFS
-// ============================================================================
-const consBlocks: ReactElement[] = [
-    <StackLayout key="layout-cons-title" maxWidth="xl">
-        <Block id="cons-title" padding="lg">
-            <EditableH2 id="h2-cons-title" blockId="cons-title">
-                6. Cons and Tradeoffs
-            </EditableH2>
-        </Block>
-    </StackLayout>,
-
-    <StackLayout key="layout-cons-intro" maxWidth="xl">
-        <Block id="cons-intro" padding="sm">
-            <EditableParagraph id="para-cons-intro" blockId="cons-intro">
-                Each approach comes with tradeoffs. Understanding these limitations helps you choose the right algorithm for your specific use case. The visualization below shows how many tiles each algorithm checks for a given radius.
-            </EditableParagraph>
-        </Block>
-    </StackLayout>,
-
-    <StackLayout key="layout-cons-visualization" maxWidth="xl">
-        <Block id="cons-visualization" padding="md" hasVisualization>
-            <div className="text-center mb-2">
-                <span className="text-sm font-medium text-muted-foreground">
-                    Radius ={" "}
-                    <InlineScrubbleNumber
-                        id="scrubble-comparison-radius"
-                        varName="comparisonRadius"
-                        {...numberPropsFromDefinition(getVariableInfo("comparisonRadius"))}
-                    />
-                </span>
-            </div>
-            <TradeoffComparisonVisualization
-                radiusVar="comparisonRadius"
-                gridSize={11}
-                height={320}
-            />
-        </Block>
-    </StackLayout>,
-
-    <StackLayout key="layout-cons-naive" maxWidth="xl">
-        <Block id="cons-naive" padding="sm">
-            <EditableH3 id="h3-cons-naive" blockId="cons-naive">
-                Distance Test Cons
-            </EditableH3>
-        </Block>
-    </StackLayout>,
-
-    <StackLayout key="layout-cons-naive-text" maxWidth="xl">
-        <Block id="cons-naive-text" padding="sm">
-            <EditableParagraph id="para-cons-naive-text" blockId="cons-naive-text">
-                The naive distance test checks every tile in the entire grid, making it extremely inefficient for large grids. A circle with radius 5 in a 1000×1000 grid touches only about 81 tiles, yet the algorithm checks all 1,000,000 tiles. The computational complexity is O(grid_width × grid_height) regardless of the circle size.
-            </EditableParagraph>
-        </Block>
-    </StackLayout>,
-
-    <StackLayout key="layout-cons-bbox" maxWidth="xl">
-        <Block id="cons-bbox" padding="sm">
-            <EditableH3 id="h3-cons-bbox" blockId="cons-bbox">
-                Bounding Box Cons
-            </EditableH3>
-        </Block>
-    </StackLayout>,
-
-    <StackLayout key="layout-cons-bbox-text" maxWidth="xl">
-        <Block id="cons-bbox-text" padding="sm">
-            <EditableParagraph id="para-cons-bbox-text" blockId="cons-bbox-text">
-                While much better than the naive approach, the bounding box still wastes effort on corner tiles. A square bounding box for a circle contains approximately 21% tiles that lie outside the circle (the corners). For each tile, we still perform a distance calculation.
-            </EditableParagraph>
-        </Block>
-    </StackLayout>,
-
-    <StackLayout key="layout-cons-bcircle" maxWidth="xl">
-        <Block id="cons-bcircle" padding="sm">
-            <EditableH3 id="h3-cons-bcircle" blockId="cons-bcircle">
-                Bounding Circle Cons
-            </EditableH3>
-        </Block>
-    </StackLayout>,
-
-    <StackLayout key="layout-cons-bcircle-text" maxWidth="xl">
-        <Block id="cons-bcircle-text" padding="sm">
-            <EditableParagraph id="para-cons-bcircle-text" blockId="cons-bcircle-text">
-                The bounding circle approach requires computing a square root for each row, which is more expensive than simple comparisons. For small circles (radius less than about 10), the overhead may outweigh the savings. The code is also more complex, making it harder to maintain. In practice, the bounding box with squared distance comparison is often the sweet spot.
-            </EditableParagraph>
-        </Block>
-    </StackLayout>,
-];
-
-// ============================================================================
-// SECTION 8: CONES / SECTORS
+// SECTION 7: CONES / SECTORS
 // ============================================================================
 const coneBlocks: ReactElement[] = [
     <StackLayout key="layout-cone-title" maxWidth="xl">
         <Block id="cone-title" padding="lg">
             <EditableH2 id="h2-cone-title" blockId="cone-title">
-                7. Cones and Sectors
+                6. Cones and Sectors
             </EditableH2>
         </Block>
     </StackLayout>,
@@ -774,13 +685,13 @@ const coneBlocks: ReactElement[] = [
 ];
 
 // ============================================================================
-// SECTION 9: MORE
+// SECTION 8: MORE
 // ============================================================================
 const moreBlocks: ReactElement[] = [
     <StackLayout key="layout-more-title" maxWidth="xl">
         <Block id="more-title" padding="lg">
             <EditableH2 id="h2-more-title" blockId="more-title">
-                8. More Techniques
+                7. More Techniques
             </EditableH2>
         </Block>
     </StackLayout>,
@@ -827,13 +738,13 @@ const moreBlocks: ReactElement[] = [
 ];
 
 // ============================================================================
-// SECTION 10: SUMMARY
+// SECTION 9: SUMMARY
 // ============================================================================
 const summaryBlocks: ReactElement[] = [
     <StackLayout key="layout-summary-title" maxWidth="xl">
         <Block id="summary-title" padding="lg">
             <EditableH2 id="h2-summary-title" blockId="summary-title">
-                9. Summary
+                8. Summary
             </EditableH2>
         </Block>
     </StackLayout>,
@@ -879,7 +790,6 @@ export const blocks: ReactElement[] = [
     ...boundingCircleBlocks,
     ...outlineBlocks,
     ...aestheticsBlocks,
-    ...consBlocks,
     ...coneBlocks,
     ...moreBlocks,
     ...summaryBlocks,
