@@ -11,6 +11,31 @@
 import React, { useMemo, useState, useCallback, useRef } from 'react';
 import { useVar, useVariableStore } from '@/stores';
 
+// Consistent color palette matching CircleGridVisualization
+const COLORS = {
+    // Primary colors - matching CircleGridVisualization
+    inside: '#0ea5e9',       // Sky blue - tiles inside circle
+    insideGlow: '#0ea5e9',   // Matching glow for consistency
+    outside: '#f1f5f9',      // Light gray - matching CircleGridVisualization
+    outsideDim: '#e2e8f0',   // Dimmed gray
+
+    // Circle and radius
+    circleBorder: '#0ea5e9',
+    circleBorderHover: '#0284c7',
+    centerDot: '#ef4444',    // Red center marker
+
+    // Player (game-style elements)
+    player: '#3b82f6',
+    playerHead: '#fbbf24',
+    playerBodyStroke: '#1d4ed8',
+    playerHeadStroke: '#f59e0b',
+
+    // Grid
+    gridLine: '#e2e8f0',
+    gridPattern: '#4ade80',
+    gridPatternDot: '#22c55e',
+};
+
 export interface PlayerRangeVisualizationProps {
     /** Variable name for radius */
     radiusVar?: string;
@@ -155,9 +180,9 @@ export const PlayerRangeVisualization = ({
                 {/* Background - grass-like field */}
                 <defs>
                     <pattern id="grass-pattern" patternUnits="userSpaceOnUse" width="20" height="20">
-                        <rect width="20" height="20" fill="#4ade80" opacity="0.15" />
-                        <circle cx="5" cy="5" r="1" fill="#22c55e" opacity="0.2" />
-                        <circle cx="15" cy="15" r="1" fill="#22c55e" opacity="0.2" />
+                        <rect width="20" height="20" fill={COLORS.gridPattern} opacity="0.15" />
+                        <circle cx="5" cy="5" r="1" fill={COLORS.gridPatternDot} opacity="0.2" />
+                        <circle cx="15" cy="15" r="1" fill={COLORS.gridPatternDot} opacity="0.2" />
                     </pattern>
                 </defs>
                 <rect x={0} y={0} width={width} height={height} fill="white" />
@@ -171,7 +196,7 @@ export const PlayerRangeVisualization = ({
                             y1={padding}
                             x2={padding + i * tileSize}
                             y2={padding + gridSize * tileSize}
-                            stroke="#d1d5db"
+                            stroke={COLORS.gridLine}
                             strokeWidth={0.5}
                             opacity={0.5}
                         />
@@ -180,14 +205,14 @@ export const PlayerRangeVisualization = ({
                             y1={padding + i * tileSize}
                             x2={padding + gridSize * tileSize}
                             y2={padding + i * tileSize}
-                            stroke="#d1d5db"
+                            stroke={COLORS.gridLine}
                             strokeWidth={0.5}
                             opacity={0.5}
                         />
                     </g>
                 ))}
 
-                {/* Tiles - glowing green for in-range, dimmed for out-of-range */}
+                {/* Tiles - matching CircleGridVisualization colors */}
                 {tiles.map((tile) => {
                     const isCenter = tile.x === centerX && tile.y === centerY;
 
@@ -200,8 +225,8 @@ export const PlayerRangeVisualization = ({
                                 y={padding + tile.y * tileSize + 2}
                                 width={tileSize - 4}
                                 height={tileSize - 4}
-                                fill={tile.inside ? '#22c55e' : '#94a3b8'}
-                                opacity={tile.inside ? 0.6 : 0.15}
+                                fill={tile.inside ? COLORS.inside : COLORS.outside}
+                                opacity={tile.inside ? 0.8 : 0.5}
                                 rx={3}
                                 className="transition-all duration-300"
                             />
@@ -213,7 +238,7 @@ export const PlayerRangeVisualization = ({
                                     width={tileSize - 4}
                                     height={tileSize - 4}
                                     fill="none"
-                                    stroke="#22c55e"
+                                    stroke={COLORS.insideGlow}
                                     strokeWidth={1.5}
                                     rx={3}
                                     opacity={0.8}
@@ -244,10 +269,10 @@ export const PlayerRangeVisualization = ({
                     cy={centerSvgY}
                     r={radius * tileSize}
                     fill="none"
-                    stroke={isHovering || isDragging ? "#15803d" : "#16a34a"}
-                    strokeWidth={isHovering || isDragging ? 3 : 2}
-                    strokeDasharray="8 4"
-                    opacity={0.9}
+                    stroke={isHovering || isDragging ? COLORS.circleBorderHover : COLORS.circleBorder}
+                    strokeWidth={isHovering || isDragging ? 2.5 : 1.5}
+                    strokeDasharray="6 3"
+                    opacity={0.8}
                     style={{ cursor: 'grab', pointerEvents: 'none' }}
                     className="transition-all duration-150"
                 />
@@ -263,8 +288,8 @@ export const PlayerRangeVisualization = ({
                                     key={angle}
                                     cx={hx}
                                     cy={hy}
-                                    r={6}
-                                    fill="#15803d"
+                                    r={5}
+                                    fill={COLORS.circleBorderHover}
                                     stroke="white"
                                     strokeWidth={2}
                                     style={{ pointerEvents: 'none' }}
@@ -285,9 +310,9 @@ export const PlayerRangeVisualization = ({
                 />
                 <defs>
                     <radialGradient id="range-glow">
-                        <stop offset="0%" stopColor="#22c55e" stopOpacity="0.3" />
-                        <stop offset="70%" stopColor="#22c55e" stopOpacity="0.1" />
-                        <stop offset="100%" stopColor="#22c55e" stopOpacity="0" />
+                        <stop offset="0%" stopColor={COLORS.inside} stopOpacity="0.3" />
+                        <stop offset="70%" stopColor={COLORS.inside} stopOpacity="0.1" />
+                        <stop offset="100%" stopColor={COLORS.inside} stopOpacity="0" />
                     </radialGradient>
                 </defs>
 
@@ -307,8 +332,8 @@ export const PlayerRangeVisualization = ({
                         cx={0}
                         cy={-2}
                         r={12}
-                        fill="#3b82f6"
-                        stroke="#1d4ed8"
+                        fill={COLORS.player}
+                        stroke={COLORS.playerBodyStroke}
                         strokeWidth={2}
                     />
                     {/* Player head */}
@@ -316,8 +341,8 @@ export const PlayerRangeVisualization = ({
                         cx={0}
                         cy={-14}
                         r={7}
-                        fill="#fbbf24"
-                        stroke="#f59e0b"
+                        fill={COLORS.playerHead}
+                        stroke={COLORS.playerHeadStroke}
                         strokeWidth={1.5}
                     />
                     {/* Eyes */}
@@ -336,13 +361,13 @@ export const PlayerRangeVisualization = ({
                 {/* Radius label */}
                 <g transform={`translate(${centerSvgX + radius * tileSize * 0.7}, ${centerSvgY - radius * tileSize * 0.7})`} style={{ pointerEvents: 'none' }}>
                     <rect
-                        x={-24}
+                        x={-22}
                         y={-10}
-                        width={48}
+                        width={44}
                         height={20}
                         fill="white"
                         rx={4}
-                        opacity={0.9}
+                        opacity={0.95}
                     />
                     <text
                         x={0}
@@ -350,7 +375,7 @@ export const PlayerRangeVisualization = ({
                         textAnchor="middle"
                         fontSize={12}
                         fontWeight="600"
-                        fill="#16a34a"
+                        fill={COLORS.circleBorder}
                     >
                         r = {radius}
                     </text>
@@ -358,8 +383,8 @@ export const PlayerRangeVisualization = ({
             </svg>
 
             {/* Tile count indicator */}
-            <div className="absolute bottom-2 right-2 bg-white/90 backdrop-blur-sm px-3 py-1.5 rounded-lg shadow-sm border border-green-200">
-                <span className="text-sm font-medium text-green-700">
+            <div className="absolute bottom-2 right-2 bg-white/90 backdrop-blur-sm px-3 py-1.5 rounded-lg shadow-sm border border-sky-200">
+                <span className="text-sm font-medium text-sky-700">
                     {tilesInRange} tiles in range
                 </span>
             </div>

@@ -3,10 +3,45 @@
  *
  * An interactive SVG visualization for exploring circle fill algorithms on a grid.
  * Supports multiple modes: basic fill, distance display, bounding box, bounding circle, outlines.
+ *
+ * The boundary circle is draggable to adjust the radius interactively.
  */
 
-import { useMemo } from 'react';
-import { useVar } from '@/stores';
+import React, { useMemo, useState, useCallback, useRef } from 'react';
+import { useVar, useVariableStore } from '@/stores';
+
+// Consistent color palette across all visualizations
+const COLORS = {
+    // Primary colors
+    inside: '#0ea5e9',      // Sky blue - tiles inside circle
+    outside: '#f1f5f9',     // Light gray - tiles outside
+    outsideDim: '#e2e8f0',  // Dimmed gray
+
+    // Circle and radius
+    circleBorder: '#0ea5e9',
+    circleBorderHover: '#0284c7',
+    centerDot: '#ef4444',   // Red center marker
+
+    // Bounding box
+    boundingBox: '#8b5cf6', // Purple
+    boundingBoxFill: '#fef3c7', // Light yellow
+
+    // Pythagorean triangle
+    dy: '#f97316',          // Orange - vertical
+    dx: '#22c55e',          // Green - horizontal
+    hypotenuse: '#3b82f6',  // Blue - radius
+    rowHighlight: '#8b5cf6', // Purple
+
+    // Outline symmetry colors
+    symmetry: [
+        '#3b82f6', '#ef4444', '#22c55e', '#f59e0b',
+        '#8b5cf6', '#ec4899', '#14b8a6', '#f97316'
+    ],
+
+    // Grid
+    gridLine: '#e2e8f0',
+    distanceText: '#64748b',
+};
 
 export type CircleGridMode =
     | 'fill'           // Basic circle fill
@@ -56,6 +91,12 @@ export interface CircleGridProps {
     height?: number;
     /** Highlight variable name for linked highlighting */
     highlightVarName?: string;
+    /** Minimum radius for dragging */
+    minRadius?: number;
+    /** Maximum radius for dragging */
+    maxRadius?: number;
+    /** Radius step for snapping */
+    radiusStep?: number;
 }
 
 export const CircleGridVisualization = ({
@@ -78,9 +119,13 @@ export const CircleGridVisualization = ({
     defaultCenterY,
     height = 400,
     highlightVarName,
+    minRadius = 0.5,
+    maxRadius,
+    radiusStep = 0.5,
 }: CircleGridProps) => {
     // Get values from store
     const radius = useVar(radiusVar || '_unused_radius', defaultRadius) as number;
+    const setVar = useVariableStore(s => s.setVariable);
     const showDistancesFromVar = useVar(showDistancesVar || '_unused_dist', showDistancesProp) as boolean;
     const showBoundingBoxFromVar = useVar(showBoundingBoxVar || '_unused_bb', showBoundingBoxProp) as boolean;
     const selectedRow = useVar(selectedRowVar || '_unused_row', defaultSelectedRow) as number;
@@ -89,6 +134,11 @@ export const CircleGridVisualization = ({
     const centerXFromVar = useVar(centerXVar || '_unused_cx', defaultCenterX ?? gridSize / 2) as number;
     const centerYFromVar = useVar(centerYVar || '_unused_cy', defaultCenterY ?? gridSize / 2) as number;
     const highlightedId = useVar(highlightVarName || '_unused_hl', '') as string;
+
+    // Dragging state
+    const svgRef = useRef<SVGSVGElement>(null);
+    const [isDragging, setIsDragging] = useState(false);
+    const [isHovering, setIsHovering] = useState(false);
 
     const showDistances = showDistancesVar ? showDistancesFromVar : showDistancesProp;
     const showBoundingBox = showBoundingBoxVar ? showBoundingBoxFromVar : showBoundingBoxProp;
@@ -102,6 +152,75 @@ export const CircleGridVisualization = ({
     const tileSize = height / (gridSize + 1);
     const padding = tileSize / 2;
     const width = (gridSize + 1) * tileSize;
+
+    // Center coordinates in SVG space
+    const centerSvgX = padding + centerX * tileSize + tileSize / 2;
+    const centerSvgY = padding + centerY * tileSize + tileSize / 2;
+
+    // Effective max radius based on grid size
+    const effectiveMaxRadius = maxRadius ?? Math.floor(gridSize / 2) - 0.5;
+
+    // Convert mouse position to radius
+    const getRadiusFromEvent = useCallback((e: MouseEvent | React.MouseEvent) => {
+        if (!svgRef.current) return radius;
+
+        const svg = svgRef.current;
+        const rect = svg.getBoundingClientRect();
+        const scaleX = width / rect.width;
+        const scaleY = height / rect.height;
+
+        const mouseX = (e.clientX - rect.left) * scaleX;
+        const mouseY = (e.clientY - rect.top) * scaleY;
+
+        const dx = mouseX - centerSvgX;
+        const dy = mouseY - centerSvgY;
+        const distance = Math.sqrt(dx * dx + dy * dy);
+
+        // Convert pixel distance to tile units
+        let newRadius = distance / tileSize;
+
+        // Snap to step
+        newRadius = Math.round(newRadius / radiusStep) * radiusStep;
+
+        // Clamp to bounds
+        return Math.max(minRadius, Math.min(effectiveMaxRadius, newRadius));
+    }, [width, height, centerSvgX, centerSvgY, tileSize, radiusStep, minRadius, effectiveMaxRadius, radius]);
+
+    // Mouse handlers for dragging
+    const handleMouseDown = useCallback((e: React.MouseEvent) => {
+        e.preventDefault();
+        setIsDragging(true);
+
+        const newRadius = getRadiusFromEvent(e);
+        if (radiusVar) {
+            setVar(radiusVar, newRadius);
+        }
+    }, [getRadiusFromEvent, radiusVar, setVar]);
+
+    const handleMouseMove = useCallback((e: MouseEvent) => {
+        if (!isDragging) return;
+
+        const newRadius = getRadiusFromEvent(e);
+        if (radiusVar) {
+            setVar(radiusVar, newRadius);
+        }
+    }, [isDragging, getRadiusFromEvent, radiusVar, setVar]);
+
+    const handleMouseUp = useCallback(() => {
+        setIsDragging(false);
+    }, []);
+
+    // Attach global mouse listeners when dragging
+    React.useEffect(() => {
+        if (isDragging) {
+            window.addEventListener('mousemove', handleMouseMove);
+            window.addEventListener('mouseup', handleMouseUp);
+            return () => {
+                window.removeEventListener('mousemove', handleMouseMove);
+                window.removeEventListener('mouseup', handleMouseUp);
+            };
+        }
+    }, [isDragging, handleMouseMove, handleMouseUp]);
 
     // Calculate which tiles are inside the circle
     const tiles = useMemo(() => {
@@ -212,40 +331,37 @@ export const CircleGridVisualization = ({
             const outlineTile = outlineTiles.find(t => t.x === tile.x && t.y === tile.y);
             if (outlineTile) {
                 if (showSymmetry) {
-                    const colors = [
-                        '#3b82f6', '#ef4444', '#22c55e', '#f59e0b',
-                        '#8b5cf6', '#ec4899', '#14b8a6', '#f97316'
-                    ];
-                    return colors[outlineTile.group % 8];
+                    return COLORS.symmetry[outlineTile.group % 8];
                 }
-                return '#3b82f6';
+                return COLORS.inside;
             }
-            return '#f1f5f9';
+            return COLORS.outside;
         }
 
         if (!tile.inside) {
             if (mode === 'boundingBox' && showBoundingBox && tile.inBoundingBox) {
-                return '#fef3c7'; // Light yellow for bounding box tiles outside circle
+                return COLORS.boundingBoxFill;
             }
-            return '#f1f5f9'; // Light gray for outside
+            return COLORS.outside;
         }
 
-        return '#3b82f6'; // Blue for inside
+        return COLORS.inside;
     };
 
     // Get tile opacity
     const getTileOpacity = (tile: typeof tiles[0]) => {
         if (mode === 'boundingBox' && !tile.inBoundingBox && !tile.inside) {
-            return 0.3; // Dim tiles outside bounding box
+            return 0.3;
         }
         return 1;
     };
 
     return (
         <svg
+            ref={svgRef}
             viewBox={`0 0 ${width} ${height}`}
             className="w-full"
-            style={{ height, maxHeight: height }}
+            style={{ height, maxHeight: height, cursor: isDragging ? 'grabbing' : 'default' }}
         >
             {/* Background */}
             <rect x={0} y={0} width={width} height={height} fill="white" />
@@ -258,7 +374,7 @@ export const CircleGridVisualization = ({
                         y1={padding}
                         x2={padding + i * tileSize}
                         y2={padding + gridSize * tileSize}
-                        stroke="#e2e8f0"
+                        stroke={COLORS.gridLine}
                         strokeWidth={0.5}
                     />
                     <line
@@ -266,7 +382,7 @@ export const CircleGridVisualization = ({
                         y1={padding + i * tileSize}
                         x2={padding + gridSize * tileSize}
                         y2={padding + i * tileSize}
-                        stroke="#e2e8f0"
+                        stroke={COLORS.gridLine}
                         strokeWidth={0.5}
                     />
                 </g>
@@ -293,7 +409,7 @@ export const CircleGridVisualization = ({
                             textAnchor="middle"
                             dominantBaseline="middle"
                             fontSize={tileSize > 35 ? 10 : 8}
-                            fill={tile.inside ? 'white' : '#64748b'}
+                            fill={tile.inside ? 'white' : COLORS.distanceText}
                             fontFamily="ui-monospace, monospace"
                         >
                             {tile.distance.toFixed(1)}
@@ -311,7 +427,7 @@ export const CircleGridVisualization = ({
                         y={padding - 8}
                         textAnchor="middle"
                         fontSize={11}
-                        fill="#0ea5e9"
+                        fill={COLORS.boundingBox}
                         fontWeight="600"
                     >
                         left
@@ -322,7 +438,7 @@ export const CircleGridVisualization = ({
                         y={padding - 8}
                         textAnchor="middle"
                         fontSize={11}
-                        fill="#0ea5e9"
+                        fill={COLORS.boundingBox}
                         fontWeight="600"
                     >
                         right
@@ -334,7 +450,7 @@ export const CircleGridVisualization = ({
                         textAnchor="end"
                         dominantBaseline="middle"
                         fontSize={11}
-                        fill="#0ea5e9"
+                        fill={COLORS.boundingBox}
                         fontWeight="600"
                     >
                         top
@@ -346,7 +462,7 @@ export const CircleGridVisualization = ({
                         textAnchor="end"
                         dominantBaseline="middle"
                         fontSize={11}
-                        fill="#0ea5e9"
+                        fill={COLORS.boundingBox}
                         fontWeight="600"
                     >
                         bottom
@@ -358,7 +474,7 @@ export const CircleGridVisualization = ({
                         width={(boundingBox.right - boundingBox.left + 1) * tileSize}
                         height={(boundingBox.bottom - boundingBox.top + 1) * tileSize}
                         fill="none"
-                        stroke="#0ea5e9"
+                        stroke={COLORS.boundingBox}
                         strokeWidth={2}
                         strokeDasharray="4 2"
                     />
@@ -370,47 +486,47 @@ export const CircleGridVisualization = ({
                 <>
                     {/* Vertical line (dy) */}
                     <line
-                        x1={padding + centerX * tileSize + tileSize / 2}
-                        y1={padding + centerY * tileSize + tileSize / 2}
-                        x2={padding + centerX * tileSize + tileSize / 2}
+                        x1={centerSvgX}
+                        y1={centerSvgY}
+                        x2={centerSvgX}
                         y2={padding + pythagoreanTriangle.rowY * tileSize + tileSize / 2}
-                        stroke="#f97316"
-                        strokeWidth={2}
+                        stroke={COLORS.dy}
+                        strokeWidth={3}
                     />
                     {/* Horizontal line (dx) */}
                     <line
-                        x1={padding + centerX * tileSize + tileSize / 2}
+                        x1={centerSvgX}
                         y1={padding + pythagoreanTriangle.rowY * tileSize + tileSize / 2}
                         x2={padding + pythagoreanTriangle.rightX * tileSize + tileSize / 2}
                         y2={padding + pythagoreanTriangle.rowY * tileSize + tileSize / 2}
-                        stroke="#22c55e"
-                        strokeWidth={2}
+                        stroke={COLORS.dx}
+                        strokeWidth={3}
                     />
                     {/* Hypotenuse (radius) */}
                     <line
-                        x1={padding + centerX * tileSize + tileSize / 2}
-                        y1={padding + centerY * tileSize + tileSize / 2}
+                        x1={centerSvgX}
+                        y1={centerSvgY}
                         x2={padding + pythagoreanTriangle.rightX * tileSize + tileSize / 2}
                         y2={padding + pythagoreanTriangle.rowY * tileSize + tileSize / 2}
-                        stroke="#3b82f6"
-                        strokeWidth={2}
+                        stroke={COLORS.hypotenuse}
+                        strokeWidth={3}
                     />
                     {/* Labels */}
                     <text
-                        x={padding + centerX * tileSize + tileSize / 2 - 15}
+                        x={centerSvgX - 18}
                         y={padding + (centerY + pythagoreanTriangle.dy / 2) * tileSize + tileSize / 2}
-                        fontSize={12}
-                        fill="#f97316"
-                        fontWeight="600"
+                        fontSize={13}
+                        fill={COLORS.dy}
+                        fontWeight="700"
                     >
                         dy
                     </text>
                     <text
                         x={padding + (centerX + pythagoreanTriangle.dx / 2) * tileSize + tileSize / 2}
-                        y={padding + pythagoreanTriangle.rowY * tileSize + tileSize / 2 + 18}
-                        fontSize={12}
-                        fill="#22c55e"
-                        fontWeight="600"
+                        y={padding + pythagoreanTriangle.rowY * tileSize + tileSize / 2 + 20}
+                        fontSize={13}
+                        fill={COLORS.dx}
+                        fontWeight="700"
                         textAnchor="middle"
                     >
                         dx = {pythagoreanTriangle.dx.toFixed(1)}
@@ -422,7 +538,7 @@ export const CircleGridVisualization = ({
                         width={(Math.floor(pythagoreanTriangle.rightX) - Math.floor(pythagoreanTriangle.leftX) + 1) * tileSize}
                         height={tileSize}
                         fill="none"
-                        stroke="#8b5cf6"
+                        stroke={COLORS.rowHighlight}
                         strokeWidth={2}
                     />
                     {/* Left/Right labels */}
@@ -431,7 +547,7 @@ export const CircleGridVisualization = ({
                         y={padding + pythagoreanTriangle.rowY * tileSize - 5}
                         textAnchor="middle"
                         fontSize={11}
-                        fill="#8b5cf6"
+                        fill={COLORS.rowHighlight}
                         fontWeight="600"
                     >
                         left
@@ -441,7 +557,7 @@ export const CircleGridVisualization = ({
                         y={padding + pythagoreanTriangle.rowY * tileSize - 5}
                         textAnchor="middle"
                         fontSize={11}
-                        fill="#8b5cf6"
+                        fill={COLORS.rowHighlight}
                         fontWeight="600"
                     >
                         right
@@ -449,37 +565,88 @@ export const CircleGridVisualization = ({
                 </>
             )}
 
-            {/* Circle outline */}
+            {/* Draggable circle boundary - invisible wider stroke for easier grabbing */}
             <circle
-                cx={padding + centerX * tileSize + tileSize / 2}
-                cy={padding + centerY * tileSize + tileSize / 2}
+                cx={centerSvgX}
+                cy={centerSvgY}
                 r={radius * tileSize}
                 fill="none"
-                stroke="#0ea5e9"
-                strokeWidth={1.5}
-                strokeDasharray="4 2"
-                opacity={0.7}
+                stroke="transparent"
+                strokeWidth={20}
+                style={{ cursor: 'grab' }}
+                onMouseDown={handleMouseDown}
+                onMouseEnter={() => setIsHovering(true)}
+                onMouseLeave={() => setIsHovering(false)}
             />
+
+            {/* Visible circle outline */}
+            <circle
+                cx={centerSvgX}
+                cy={centerSvgY}
+                r={radius * tileSize}
+                fill="none"
+                stroke={isHovering || isDragging ? COLORS.circleBorderHover : COLORS.circleBorder}
+                strokeWidth={isHovering || isDragging ? 2.5 : 1.5}
+                strokeDasharray="6 3"
+                opacity={0.8}
+                style={{ pointerEvents: 'none' }}
+                className="transition-all duration-150"
+            />
+
+            {/* Drag handle indicators on the circle */}
+            {(isHovering || isDragging) && (
+                <>
+                    {[0, 90, 180, 270].map((angle) => {
+                        const rad = (angle * Math.PI) / 180;
+                        const hx = centerSvgX + Math.cos(rad) * radius * tileSize;
+                        const hy = centerSvgY + Math.sin(rad) * radius * tileSize;
+                        return (
+                            <circle
+                                key={angle}
+                                cx={hx}
+                                cy={hy}
+                                r={5}
+                                fill={COLORS.circleBorderHover}
+                                stroke="white"
+                                strokeWidth={2}
+                                style={{ pointerEvents: 'none' }}
+                            />
+                        );
+                    })}
+                </>
+            )}
 
             {/* Center marker */}
             <circle
-                cx={padding + centerX * tileSize + tileSize / 2}
-                cy={padding + centerY * tileSize + tileSize / 2}
-                r={4}
-                fill="#ef4444"
+                cx={centerSvgX}
+                cy={centerSvgY}
+                r={5}
+                fill={COLORS.centerDot}
+                style={{ pointerEvents: 'none' }}
             />
 
             {/* Radius label */}
-            <text
-                x={padding + centerX * tileSize + tileSize / 2 + radius * tileSize / 2}
-                y={padding + centerY * tileSize + tileSize / 2 - 8}
-                textAnchor="middle"
-                fontSize={12}
-                fill="#0ea5e9"
-                fontWeight="600"
-            >
-                r = {radius}
-            </text>
+            <g transform={`translate(${centerSvgX + radius * tileSize * 0.7}, ${centerSvgY - radius * tileSize * 0.7})`} style={{ pointerEvents: 'none' }}>
+                <rect
+                    x={-22}
+                    y={-10}
+                    width={44}
+                    height={20}
+                    fill="white"
+                    rx={4}
+                    opacity={0.95}
+                />
+                <text
+                    x={0}
+                    y={4}
+                    textAnchor="middle"
+                    fontSize={12}
+                    fill={COLORS.circleBorder}
+                    fontWeight="600"
+                >
+                    r = {radius}
+                </text>
+            </g>
         </svg>
     );
 };
