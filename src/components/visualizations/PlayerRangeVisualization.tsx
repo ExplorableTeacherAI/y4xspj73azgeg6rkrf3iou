@@ -4,10 +4,12 @@
  * A game-style visualization showing a player icon at the center with an
  * adjustable "throw range" circle. Tiles within range glow green, tiles
  * outside are dimmed. Creates an engaging game-like feel.
+ *
+ * The boundary circle is draggable to adjust the radius interactively.
  */
 
-import { useMemo } from 'react';
-import { useVar } from '@/stores';
+import React, { useMemo, useState, useCallback, useRef } from 'react';
+import { useVar, useVariableStore } from '@/stores';
 
 export interface PlayerRangeVisualizationProps {
     /** Variable name for radius */
@@ -18,6 +20,12 @@ export interface PlayerRangeVisualizationProps {
     gridSize?: number;
     /** Height of the visualization */
     height?: number;
+    /** Minimum radius */
+    minRadius?: number;
+    /** Maximum radius */
+    maxRadius?: number;
+    /** Radius step */
+    radiusStep?: number;
 }
 
 export const PlayerRangeVisualization = ({
@@ -25,8 +33,15 @@ export const PlayerRangeVisualization = ({
     defaultRadius = 3.5,
     gridSize = 11,
     height = 350,
+    minRadius = 0.5,
+    maxRadius = 6,
+    radiusStep = 0.5,
 }: PlayerRangeVisualizationProps) => {
     const radius = useVar(radiusVar || '_unused_radius', defaultRadius) as number;
+    const setVar = useVariableStore(s => s.setVariable);
+    const svgRef = useRef<SVGSVGElement>(null);
+    const [isDragging, setIsDragging] = useState(false);
+    const [isHovering, setIsHovering] = useState(false);
 
     // Calculate center
     const centerX = Math.floor(gridSize / 2);
@@ -36,6 +51,72 @@ export const PlayerRangeVisualization = ({
     const tileSize = height / (gridSize + 1);
     const padding = tileSize / 2;
     const width = (gridSize + 1) * tileSize;
+
+    // Center coordinates in SVG space
+    const centerSvgX = padding + centerX * tileSize + tileSize / 2;
+    const centerSvgY = padding + centerY * tileSize + tileSize / 2;
+
+    // Convert mouse position to radius
+    const getRadiusFromEvent = useCallback((e: MouseEvent | React.MouseEvent) => {
+        if (!svgRef.current) return radius;
+
+        const svg = svgRef.current;
+        const rect = svg.getBoundingClientRect();
+        const scaleX = width / rect.width;
+        const scaleY = height / rect.height;
+
+        const mouseX = (e.clientX - rect.left) * scaleX;
+        const mouseY = (e.clientY - rect.top) * scaleY;
+
+        const dx = mouseX - centerSvgX;
+        const dy = mouseY - centerSvgY;
+        const distance = Math.sqrt(dx * dx + dy * dy);
+
+        // Convert pixel distance to tile units
+        let newRadius = distance / tileSize;
+
+        // Snap to step
+        newRadius = Math.round(newRadius / radiusStep) * radiusStep;
+
+        // Clamp to bounds
+        return Math.max(minRadius, Math.min(maxRadius, newRadius));
+    }, [width, height, centerSvgX, centerSvgY, tileSize, radiusStep, minRadius, maxRadius, radius]);
+
+    // Mouse handlers for dragging
+    const handleMouseDown = useCallback((e: React.MouseEvent) => {
+        e.preventDefault();
+        setIsDragging(true);
+
+        const newRadius = getRadiusFromEvent(e);
+        if (radiusVar) {
+            setVar(radiusVar, newRadius);
+        }
+    }, [getRadiusFromEvent, radiusVar, setVar]);
+
+    const handleMouseMove = useCallback((e: MouseEvent) => {
+        if (!isDragging) return;
+
+        const newRadius = getRadiusFromEvent(e);
+        if (radiusVar) {
+            setVar(radiusVar, newRadius);
+        }
+    }, [isDragging, getRadiusFromEvent, radiusVar, setVar]);
+
+    const handleMouseUp = useCallback(() => {
+        setIsDragging(false);
+    }, []);
+
+    // Attach global mouse listeners when dragging
+    React.useEffect(() => {
+        if (isDragging) {
+            window.addEventListener('mousemove', handleMouseMove);
+            window.addEventListener('mouseup', handleMouseUp);
+            return () => {
+                window.removeEventListener('mousemove', handleMouseMove);
+                window.removeEventListener('mouseup', handleMouseUp);
+            };
+        }
+    }, [isDragging, handleMouseMove, handleMouseUp]);
 
     // Calculate which tiles are inside the circle
     const tiles = useMemo(() => {
@@ -66,9 +147,10 @@ export const PlayerRangeVisualization = ({
     return (
         <div className="relative">
             <svg
+                ref={svgRef}
                 viewBox={`0 0 ${width} ${height}`}
                 className="w-full"
-                style={{ height, maxHeight: height }}
+                style={{ height, maxHeight: height, cursor: isDragging ? 'grabbing' : 'default' }}
             >
                 {/* Background - grass-like field */}
                 <defs>
@@ -142,25 +224,64 @@ export const PlayerRangeVisualization = ({
                     );
                 })}
 
-                {/* Range circle - dashed outline */}
+                {/* Range circle - draggable boundary */}
+                {/* Invisible wider stroke for easier grabbing */}
                 <circle
-                    cx={padding + centerX * tileSize + tileSize / 2}
-                    cy={padding + centerY * tileSize + tileSize / 2}
+                    cx={centerSvgX}
+                    cy={centerSvgY}
                     r={radius * tileSize}
                     fill="none"
-                    stroke="#16a34a"
-                    strokeWidth={2}
-                    strokeDasharray="8 4"
-                    opacity={0.8}
+                    stroke="transparent"
+                    strokeWidth={20}
+                    style={{ cursor: 'grab' }}
+                    onMouseDown={handleMouseDown}
+                    onMouseEnter={() => setIsHovering(true)}
+                    onMouseLeave={() => setIsHovering(false)}
                 />
+                {/* Visible dashed outline */}
+                <circle
+                    cx={centerSvgX}
+                    cy={centerSvgY}
+                    r={radius * tileSize}
+                    fill="none"
+                    stroke={isHovering || isDragging ? "#15803d" : "#16a34a"}
+                    strokeWidth={isHovering || isDragging ? 3 : 2}
+                    strokeDasharray="8 4"
+                    opacity={0.9}
+                    style={{ cursor: 'grab', pointerEvents: 'none' }}
+                    className="transition-all duration-150"
+                />
+                {/* Drag handle indicators on the circle */}
+                {(isHovering || isDragging) && (
+                    <>
+                        {[0, 90, 180, 270].map((angle) => {
+                            const rad = (angle * Math.PI) / 180;
+                            const hx = centerSvgX + Math.cos(rad) * radius * tileSize;
+                            const hy = centerSvgY + Math.sin(rad) * radius * tileSize;
+                            return (
+                                <circle
+                                    key={angle}
+                                    cx={hx}
+                                    cy={hy}
+                                    r={6}
+                                    fill="#15803d"
+                                    stroke="white"
+                                    strokeWidth={2}
+                                    style={{ pointerEvents: 'none' }}
+                                />
+                            );
+                        })}
+                    </>
+                )}
 
                 {/* Inner glow for range */}
                 <circle
-                    cx={padding + centerX * tileSize + tileSize / 2}
-                    cy={padding + centerY * tileSize + tileSize / 2}
+                    cx={centerSvgX}
+                    cy={centerSvgY}
                     r={radius * tileSize}
                     fill="url(#range-glow)"
                     opacity={0.1}
+                    style={{ pointerEvents: 'none' }}
                 />
                 <defs>
                     <radialGradient id="range-glow">
@@ -171,7 +292,7 @@ export const PlayerRangeVisualization = ({
                 </defs>
 
                 {/* Player icon at center */}
-                <g transform={`translate(${padding + centerX * tileSize + tileSize / 2}, ${padding + centerY * tileSize + tileSize / 2})`}>
+                <g transform={`translate(${centerSvgX}, ${centerSvgY})`} style={{ pointerEvents: 'none' }}>
                     {/* Player shadow */}
                     <ellipse
                         cx={0}
@@ -213,7 +334,7 @@ export const PlayerRangeVisualization = ({
                 </g>
 
                 {/* Radius label */}
-                <g transform={`translate(${padding + centerX * tileSize + tileSize / 2 + radius * tileSize * 0.7}, ${padding + centerY * tileSize + tileSize / 2 - radius * tileSize * 0.7})`}>
+                <g transform={`translate(${centerSvgX + radius * tileSize * 0.7}, ${centerSvgY - radius * tileSize * 0.7})`} style={{ pointerEvents: 'none' }}>
                     <rect
                         x={-24}
                         y={-10}
