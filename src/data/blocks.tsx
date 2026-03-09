@@ -17,6 +17,7 @@ import {
 } from "@/components/atoms";
 import { FormulaBlock } from "@/components/molecules/formula/FormulaBlock";
 import { CircleGridVisualization } from "@/components/visualizations/CircleGridVisualization";
+import { PlayerRangeVisualization } from "@/components/visualizations/PlayerRangeVisualization";
 
 // Initialize variables and their colors from this file's variable definitions
 import { useVariableStore, initializeVariableColors } from "@/stores";
@@ -65,8 +66,7 @@ const introBlocks: ReactElement[] = [
             </EditableParagraph>
         </Block>
         <Block id="intro-grid" padding="sm" hasVisualization>
-            <CircleGridVisualization
-                mode="fill"
+            <PlayerRangeVisualization
                 radiusVar="introRadius"
                 gridSize={11}
                 height={350}
