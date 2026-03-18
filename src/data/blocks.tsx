@@ -43,7 +43,7 @@ const introBlocks: ReactElement[] = [
     <StackLayout key="layout-intro-title" maxWidth="xl">
         <Block id="intro-title" padding="lg">
             <EditableH1 id="h1-intro-title" blockId="intro-title">
-                Circle Fill on a Grid
+                <InlineSpotColor varName="circleHighlight" color="#62D0AD">Circle</InlineSpotColor> Fill on a Grid
             </EditableH1>
         </Block>
     </StackLayout>,
